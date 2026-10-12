@@ -37,36 +37,37 @@ final class PushEventCharacteristic: BluetoothCharacteristic {
 
   func parse(update data: Data) throws {
     // Possibly just sniffer error, but some rare payloads differ and may represent a different message
-    guard data.bytes.endIndex == 20,
-          data.bytes.prefix(2) == [85, 170],
-          data.bytes[2...18].reduce(0, +) == data.bytes[19]
+    let bytes = [UInt8](data)
+    guard bytes.endIndex == 20,
+          bytes.prefix(2) == [85, 170],
+          bytes[2...18].reduce(0, +) == bytes[19]
     else {
       throw BluetoothParsingError.unexpectedValue(data: data)
     }
 
-    let isHeating = data.bytes[2] == 1
-    guard [0, 1].contains(data.bytes[2]) else {
+    let isHeating = bytes[2] == 1
+    guard [0, 1].contains(bytes[2]) else {
       throw BluetoothParsingError.unexpectedValue("\(Self.self) isHeating \(isHeating)")
     }
 
-    let isFahrenheit = data.bytes[3] == 1
+    let isFahrenheit = bytes[3] == 1
     let unit = isFahrenheit ? UnitTemperature.fahrenheit : .celsius
-    guard [0, 1].contains(data.bytes[3]) else {
+    guard [0, 1].contains(bytes[3]) else {
       throw BluetoothParsingError.unexpectedValue("\(Self.self) isFahrenheit \(isFahrenheit)")
     }
 
     // Literal on-screen number (interpret using `isFahrenheit`)
-    let temperatureCurrent = data.bytes[4]
+    let temperatureCurrent = bytes[4]
 
     // Literal on-screen number (interpret using `isFahrenheit`)
-    let temperatureTarget = data.bytes[5]
+    let temperatureTarget = bytes[5]
 
-    let isCharging = data.bytes[6] == 1
-    guard [0, 1].contains(data.bytes[6]) else {
+    let isCharging = bytes[6] == 1
+    guard [0, 1].contains(bytes[6]) else {
       throw BluetoothParsingError.unexpectedValue("\(Self.self) isCharging \(isCharging)")
     }
 
-    let batteryBars = data.bytes[7]
+    let batteryBars = bytes[7]
     guard (0...5).contains(batteryBars) else {
       throw BluetoothParsingError.unexpectedValue("\(Self.self) batteryBars \(batteryBars)")
     }
